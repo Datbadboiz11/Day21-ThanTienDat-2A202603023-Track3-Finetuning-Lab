@@ -1,0 +1,17 @@
+# Core versions recorded from the completed Colab Tesla T4 experiment.
+# Python 3.13.15, torch CUDA 13.0 wheel; see results/environment.json.
+# Install the CUDA-matching torch wheel first if the configured pip index
+# does not supply 2.11.0+cu130. Full Colab freeze: results/requirements-lock.txt.
+# This locks core dependencies; it is not a cross-platform full environment lock.
+torch==2.11.0+cu130
+transformers==5.18.0
+trl==1.14.2
+peft==0.21.1
+accelerate==1.15.0
+datasets==5.1.0
+torchao==0.18.0
+bitsandbytes==0.50.2; platform_system == "Linux"
+Jinja2==3.1.6
+tokenizers==0.23.2
+jupytext==1.19.5
+pytest==8.4.2

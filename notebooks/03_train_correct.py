@@ -172,7 +172,10 @@ row["mask_mode"] = MASK_MODE
 # Record the step budget so NB5/verify can CHECK that the four runs are comparable,
 # instead of trusting that they were configured the same way.
 row["max_steps"] = STEPS
+row["epochs"] = EPOCHS
 report.append_row(row, results_dir=ROOT / "results")
+report.write_json(trainer.state.log_history, "training_log_correct.json", results_dir=ROOT / "results")
+report.backup_progress(ROOT)
 print(json.dumps(row, ensure_ascii=False, indent=2))
 
 # %% [markdown]

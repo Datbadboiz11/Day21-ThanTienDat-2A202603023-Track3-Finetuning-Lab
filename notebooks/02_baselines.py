@@ -16,7 +16,7 @@
 # | (c) | bản fine-tune | đo ở NB5 |
 
 # %%
-import json, os, pathlib, sys
+import json, os, pathlib, sys, hashlib
 sys.path.insert(0, str(pathlib.Path.cwd() / "src"))
 sys.path.insert(0, str(pathlib.Path.cwd().parent / "src"))
 
@@ -94,7 +94,18 @@ frozen = {
     "n_regression": len(regression),
     "eval_limit": EVAL_LIMIT or None,
     "smoke_mode": bool(EVAL_LIMIT),
+    "eval_checksums": {name: hashlib.sha256((ROOT / "data" / name).read_bytes()).hexdigest()
+                       for name in ("eval_target.jsonl", "eval_regression.jsonl")},
 }
+report.write_json(
+    [{"i": i, "input": r["input"], "label": r["label"],
+      "baseline_a": a, "baseline_b": b}
+     for i, (r, a, b) in enumerate(zip(target, preds_a, preds_b))],
+    "baseline_predictions.json", results_dir=ROOT / "results")
+report.write_json(
+    [{"instruction": r["instruction"], "keywords": r["keywords"], "prediction": p}
+     for r, p in zip(regression, rpreds_b)],
+    "baseline_regression_predictions.json", results_dir=ROOT / "results")
 report.write_json(frozen, "baselines_frozen.json", results_dir=ROOT / "results")
 print(json.dumps(frozen, ensure_ascii=False, indent=2))
 

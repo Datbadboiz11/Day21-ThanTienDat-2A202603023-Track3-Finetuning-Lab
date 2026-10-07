@@ -17,6 +17,8 @@ import sys
 import time
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+from labkit import report
 
 STAGES = {
     "nb1": ("notebooks/01_data_and_mask.py", "data, chat template & loss mask"),
@@ -59,6 +61,7 @@ def main(argv: list[str]) -> int:
         rc = subprocess.run([sys.executable, "-u", script], cwd=ROOT, env=env).returncode
         dt = time.perf_counter() - t0
         timings.append((name, dt))
+        report.backup_progress(ROOT)
         if rc != 0:
             print(f"\n!! {name.upper()} FAILED (exit {rc}) after {dt:.0f}s — stopping.",
                   flush=True)

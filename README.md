@@ -3,6 +3,19 @@
 > **AICB-P2T3 · Ngày 21 · Chương 5 — Fine-tuning & An Toàn**
 > Đi kèm deck `day21-fine-tuning-llms-lora-qlora.tex` (140 trang · 25 module; bản gọn 72 trang).
 
+**Bản chuẩn bị cho Thân Tiến Đạt · 2A202603023:** xem [COLAB_GUIDE.md](COLAB_GUIDE.md).
+Mở `colab/Lab21_RUN_ALL.ipynb` trên Colab và upload `dist/COLAB_INPUT_2A202603023.zip`
+ở ô Setup. Gói đã chứa mã và dữ liệu; không cần push GitHub trước. Chạy
+`python scripts/export_colab.py --mode input` để tạo lại ZIP sau khi sửa mã.
+
+**Trạng thái bài đã hoàn thành:** NB1–NB5 có kết quả đầy đủ; báo cáo và phản tư tại
+[submission/REPORT.md](submission/REPORT.md) và [submission/REFLECTION.md](submission/REFLECTION.md).
+Correct đạt target 97% so với baseline tối ưu 76,5%, nhưng regression giảm từ 79,11%
+xuống 61,11%, nên phán quyết **FAILED**. Đây là kết quả được phân tích trong bài nộp.
+Hướng dẫn và giới hạn rubric tại [submission/README.md](submission/README.md).
+Chạy `python scripts/package_submission.py` để kiểm tra và tạo hai ZIP bài nộp trong
+`dist/`; chọn một định dạng Option A hoặc Option C. Các phần thưởng chưa thực hiện.
+
 **Một câu tóm tắt lab:** fine-tune một model mở bằng LoRA — rồi **chứng minh** nó thắng
 được chính model đó khi đã được prompt tử tế. Nếu không chứng minh được, phát hiện ra
 điều đó cũng được tính điểm đầy đủ.
@@ -58,8 +71,10 @@ mỗi model một khác, và mask phải được chứng minh lại (NB1).
 
 ### Colab (khuyến nghị)
 
-Mở **[`colab/Lab21_RUN_ALL.ipynb`](https://colab.research.google.com/github/VinUni-AI20k/Day21-Track3-Finetuning-Lab/blob/main/colab/Lab21_RUN_ALL.ipynb)**
-→ Runtime → Change runtime type → **T4 GPU** → chạy lần lượt ô 1 → 4.
+Upload **`colab/Lab21_RUN_ALL.ipynb`** vào Google Colab
+→ Runtime → Change runtime type → **T4 GPU** → chạy lần lượt ô 1 → 6.
+Ở ô 1 upload gói ZIP đã chuẩn bị. Đọc điểm baseline ở ô 3 trước khi train tại ô 4.
+Ô 5 sinh bảng số đo; ô 6 tải ZIP kết quả về máy. Xem hướng dẫn đầy đủ trong `COLAB_GUIDE.md`.
 
 > **Mỗi lần repo đổi, hãy mở LẠI tab (reload), đừng chỉ reconnect.** Colab đọc mã
 > notebook từ GitHub đúng **một lần**, lúc URL được mở; reconnect, đổi runtime hay máy ảo

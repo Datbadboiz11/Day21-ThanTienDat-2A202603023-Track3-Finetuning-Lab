@@ -11,7 +11,7 @@
 # target **và** không tụt general capability quá ngưỡng (deck §6.3).
 
 # %%
-import json, os, pathlib, sys
+import json, os, pathlib, sys, hashlib
 sys.path.insert(0, str(pathlib.Path.cwd() / "src"))
 sys.path.insert(0, str(pathlib.Path.cwd().parent / "src"))
 
@@ -33,6 +33,16 @@ if EVAL_LIMIT:
     target, regression = target[:EVAL_LIMIT], regression[:EVAL_LIMIT]
 
 frozen = json.loads((ROOT / "results" / "baselines_frozen.json").read_text(encoding="utf-8"))
+if frozen["model"] != TIER.model_id or frozen["tier"] != TIER.name:
+    raise SystemExit("model/tier mismatch with NB2 — keep one model and tier for the experiment")
+if frozen.get("n_regression") != len(regression):
+    raise SystemExit("regression slice mismatch with NB2 — keep EVAL_LIMIT identical")
+for name, digest in frozen.get("eval_checksums", {}).items():
+    if hashlib.sha256((ROOT / "data" / name).read_bytes()).hexdigest() != digest:
+        raise SystemExit(f"{name} changed after NB2 — the comparison is invalid")
+prompt_sha = hashlib.sha256(generate.OPTIMIZED_PROMPT.encode()).hexdigest()[:16]
+if frozen.get("optimized_prompt_sha") != prompt_sha:
+    raise SystemExit("optimized prompt changed after NB2 — start a new experiment")
 base_b = ev.GroupScores(**{k: v for k, v in frozen["baseline_b"].items() if k != "extra"})
 base_a = ev.GroupScores(**{k: v for k, v in frozen["baseline_a"].items() if k != "extra"})
 
@@ -186,17 +196,22 @@ report.write_json(autopsy, "autopsy.json", results_dir=ROOT / "results")
 # cherry-pick và bị trừ điểm ở mục Evaluation Quality.
 
 # %%
-rows = []
-for i, (p, r) in enumerate(zip(preds_ft, target)):
-    s_ft = ev.triage_field_accuracy(p, r["label"])
-    rows.append({"i": i, "ticket": r["input"][:70], "ft_score": round(s_ft, 2),
-                 "ft_pred": p.replace("\n", " ")[:90]})
-rows.sort(key=lambda x: x["ft_score"])
-print("--- 3 ca TỆ NHẤT (bắt buộc đưa vào report) ---")
-print(report.markdown_table(rows[:3], ["i", "ticket", "ft_score", "ft_pred"]))
-print("\n--- 3 ca TỐT NHẤT ---")
-print(report.markdown_table(rows[-3:], ["i", "ticket", "ft_score", "ft_pred"]))
+baseline_path = ROOT / "results" / "baseline_predictions.json"
+if not baseline_path.exists():
+    raise SystemExit("Missing baseline_predictions.json — use the updated NB2 before training")
+baseline_preds = json.loads(baseline_path.read_text(encoding="utf-8"))
+rows = report.compare_predictions(target, baseline_preds, preds_ft)
+losses = [r for r in rows if r["outcome"] == "loss"]
+wins = [r for r in rows if r["outcome"] == "win"]
+print(f"So với (b): {len(wins)} ca thắng, {len(losses)} ca thua, {len(rows)-len(wins)-len(losses)} ca hoà")
+print(report.markdown_table(rows[:3] + rows[-3:], ["i", "base_score", "ft_score", "delta", "outcome"]))
+if len(losses) < 2:
+    print("⚠ Có ít hơn 2 ca FT thua (b). Ghi đúng số đo; không biến ca hoà thành ca thua.")
 report.write_json(rows, "qualitative.json", results_dir=ROOT / "results")
+report.write_json(
+    [{"instruction": r["instruction"], "keywords": r["keywords"], "prediction": p}
+     for r, p in zip(regression, rpreds_ft)],
+    "ft_regression_predictions.json", results_dir=ROOT / "results")
 
 # %% [markdown]
 # ## ✅ Checkpoint NB5

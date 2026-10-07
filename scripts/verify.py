@@ -35,6 +35,18 @@ def _sha(path: pathlib.Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
 
 
+def _matches_checksum(path: pathlib.Path, expected: str) -> bool:
+    """Git on Windows can check out JSONL as CRLF; permit that exact newline change.
+
+    Keep raw-byte equality as the first choice. Do not reserialize JSON, strip spaces
+    or change labels: only CRLF -> LF can explain the shipped corpus's checksum.
+    Frozen NB2 checksums continue to check the exact bytes used for the experiment.
+    """
+    raw = path.read_bytes()
+    return (hashlib.sha256(raw).hexdigest()[:16] == expected
+            or hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest()[:16] == expected)
+
+
 def _load_json(path: pathlib.Path):
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -178,7 +190,7 @@ def full() -> None:
     ref = _load_json(ROOT / "data" / "checksums.json")
     if ref:
         drift = [f for f, h in ref.items() if (ROOT / "data" / f).exists()
-                 and _sha(ROOT / "data" / f) != h]
+                 and not _matches_checksum(ROOT / "data" / f, h)]
         if not drift:
             check("eval sets unmodified", OK)
         elif declared:
